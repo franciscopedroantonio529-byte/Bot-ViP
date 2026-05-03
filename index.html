@@ -1,0 +1,196 @@
+<<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>MONET IA SUPREMA</title>
+
+<style>
+body{
+    font-family: Arial;
+    background: radial-gradient(circle, #020617, #0f172a);
+    color:white;
+    text-align:center;
+}
+
+.card{
+    margin:20px;
+    padding:20px;
+    background:rgba(30,41,59,0.9);
+    border-radius:20px;
+    box-shadow:0 0 40px rgba(0,0,0,0.7);
+}
+
+button{
+    padding:12px;
+    margin:6px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.blue{background:#2563eb;}
+.red{background:#dc2626;}
+.yellow{background:#eab308;color:black;}
+
+#signal{
+    font-size:32px;
+    margin-top:20px;
+}
+
+.stats{
+    margin-top:15px;
+    font-size:14px;
+}
+
+input{
+    padding:10px;
+    border-radius:8px;
+    border:none;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>🤖 MONET IA SUPREMA</h2>
+
+<h3>📸 Importar Print (visual)</h3>
+<input type="file" accept="image/*">
+
+<h3>⚡ Entrada Rápida</h3>
+<button class="blue" onclick="add('P')">🔵 Player</button>
+<button class="red" onclick="add('B')">🔴 Banker</button>
+<button class="yellow" onclick="add('T')">☣️ Empate</button>
+
+<div id="signal">Aguardando dados...</div>
+
+<div class="stats" id="stats"></div>
+</div>
+
+<script>
+let hist=[];
+
+let green=0, red=0, tie=0;
+
+let pesos={
+    cont:2,
+    quebra:2,
+    freq:1.5,
+    alt:1
+};
+
+function add(r){
+    hist.push(r);
+    analisar();
+}
+
+function analisar(){
+
+    if(hist.length < 4){
+        signal("⚠️ Poucos dados");
+        return;
+    }
+
+    let ult = hist.slice(-6);
+
+    let p=0,b=0;
+
+    // Continuação
+    if(ult.slice(-3).every(x=>x=="P")) p+=pesos.cont;
+    if(ult.slice(-3).every(x=>x=="B")) b+=pesos.cont;
+
+    // Quebra
+    if(ult.every(x=>x=="P")) b+=pesos.quebra;
+    if(ult.every(x=>x=="B")) p+=pesos.quebra;
+
+    // Frequência matemática
+    let cp=ult.filter(x=>x=="P").length;
+    let cb=ult.filter(x=>x=="B").length;
+
+    let probP = cp/ult.length;
+    let probB = cb/ult.length;
+
+    p += probP * pesos.freq;
+    b += probB * pesos.freq;
+
+    // Alternância
+    let seq=ult.join("");
+    if(seq.includes("PBPB")) p+=pesos.alt;
+    if(seq.includes("BPBP")) b+=pesos.alt;
+
+    // Anti-caos
+    if(Math.abs(cp-cb)<=1){
+        signal("❌ SEM ENTRADA (caos)");
+        return;
+    }
+
+    let sinalFinal="❌ SEM ENTRADA";
+
+    if(p>b && p>=2) sinalFinal="🔵 PLAYER";
+    if(b>p && b>=2) sinalFinal="🔴 BANKER";
+
+    signal(sinalFinal);
+
+    avaliar(sinalFinal);
+}
+
+function signal(txt){
+    document.getElementById("signal").innerHTML=txt;
+}
+
+function avaliar(sinal){
+
+    let ultimo = hist[hist.length-1];
+
+    if(ultimo=="T"){ tie++; return; }
+
+    if((sinal.includes("PLAYER") && ultimo=="P") ||
+       (sinal.includes("BANKER") && ultimo=="B")){
+        green++;
+    } else {
+        red++;
+    }
+
+    let total=green+red;
+    let acc = total>0 ? ((green/total)*100).toFixed(1):0;
+
+    document.getElementById("stats").innerHTML=
+        "✅ Green: "+green+
+        " | ❌ Red: "+red+
+        " | ☣️ Empate: "+tie+
+        "<br>📊 Assertividade: "+acc+"%";
+
+    ajustar(acc);
+}
+
+function ajustar(acc){
+
+    if(acc < 50){
+        pesos.cont +=0.2;
+        pesos.freq +=0.2;
+    }
+    else if(acc > 65){
+        pesos.quebra +=0.2;
+    }
+
+}
+</script>
+
+</body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script src="render.js"></script><!-- defines canvas, ctx, draw() -->
+  <script src="input.js"></script><!-- attaches keyboard + touch listeners -->
+  <script src="game.js"></script> <!-- state, loop, boot -->
+
+</body>
+</html>
